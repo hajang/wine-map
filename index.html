@@ -29,11 +29,15 @@ select{font:inherit;font-size:16px;height:38px;color:var(--text-primary);backgro
 .chip{font-size:13px;padding:5px 10px;display:inline-flex;align-items:center;gap:6px}
 .chip.on{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
 .sq{width:8px;height:8px;border-radius:2px;display:inline-block}
-.lab{font-size:12px;color:var(--text-muted);margin:14px 0 4px}
-.txt{font-size:14px;line-height:1.65;margin:0}
+.lab{font-size:12px;color:var(--text-muted);margin:14px 0 6px}
+.txt{font-size:14px;line-height:1.6;margin:0}
 .meter{display:flex;gap:3px}
 .meter span{flex:1;height:6px;border-radius:2px;background:var(--border)}
 .zb{width:38px;height:38px;padding:0;background:var(--surface-2);font-size:20px;line-height:1}
+.row{display:block;width:100%;text-align:left;padding:8px 10px;margin-top:6px}
+.row.on{background:var(--bg-accent);border-color:var(--border-accent)}
+.row b{font-weight:500;font-size:13px}
+.row span{display:block;font-size:13px;color:var(--text-secondary);margin-top:2px}
 </style>
 </head>
 <body>
@@ -43,7 +47,7 @@ select{font:inherit;font-size:16px;height:38px;color:var(--text-primary);backgro
 <div class="seg" id="flt"><button data-f="all" class="on">전체</button><button data-f="w">화이트</button><button data-f="r">레드</button></div>
 <select id="sel" style="flex:1;min-width:0"><option value="">품종 선택</option></select>
 </div>
-<div style="background:var(--surface-1);border:0.5px solid var(--border);border-radius:12px;padding:8px">
+<div id="mapbox" style="background:var(--surface-1);border:0.5px solid var(--border);border-radius:12px;padding:8px;scroll-margin-top:12px">
 <div id="pres" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px"></div>
 <div style="position:relative">
 <svg id="map" viewBox="0 0 400 260" width="100%" style="display:block;touch-action:none" role="img" aria-label="와인 산지 세계 지도"></svg>
@@ -55,7 +59,7 @@ select{font:inherit;font-size:16px;height:38px;color:var(--text-primary);backgro
 <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--text-secondary);margin-top:6px;padding-left:2px">
 <span><span class="sq" style="background:#BA7517"></span> 화이트</span><span><span class="sq" style="background:#E24B4A"></span> 레드</span><span><span class="sq" style="background:#7F77DD"></span> 화이트+레드</span><span><span style="display:inline-block;width:14px;height:2px;background:#378ADD;vertical-align:middle"></span> 강</span>
 </div>
-<p style="font-size:12px;color:var(--text-muted);margin:4px 0 0 2px">두 손가락으로 확대하고 드래그로 이동해요. 겹친 점을 누르면 그 지역이 확대돼요.</p>
+<p style="font-size:12px;color:var(--text-muted);margin:4px 0 0 2px">점이나 지역 이름을 누르면 선택돼요. 두 손가락으로 확대·이동해요.</p>
 </div>
 <div id="reg" style="margin-top:12px;font-size:14px"></div>
 <div id="det" style="margin-top:12px"></div>
@@ -64,104 +68,99 @@ select{font:inherit;font-size:16px;height:38px;color:var(--text-primary);backgro
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js" crossorigin="anonymous"></script>
 <script>
 const R={chablis:['샤블리','프랑스',3.8,47.8],cotenuits:['코트 드 뉘','프랑스',4.96,47.19],cotebeaune:['코트 드 본','프랑스',4.79,46.99],macon:['마코네','프랑스',4.78,46.38],beaujolais:['보졸레','프랑스',4.65,46.1],champagne:['샹파뉴','프랑스',4.0,49.05],
-medoc:['메독·오메독 (좌안)','프랑스',-0.8,45.15,'메독 · 좌안'],graves:['그라브·페삭레오냥 (좌안)','프랑스',-0.6,44.7,'그라브 · 좌안'],sauternes:['소테른·바르삭 (좌안)','프랑스',-0.34,44.54,'소테른 · 좌안'],edm:['앙트르 되 메르 (두 강 사이)','프랑스',-0.2,44.75,'앙트르 되 메르'],rightbank:['생테밀리옹·포므롤 (우안)','프랑스',-0.15,44.95,'생테밀리옹 · 우안'],
-loireE:['루아르 동부 (상세르·푸이 퓌메)','프랑스',2.85,47.3],loireC:['루아르 중부 (부브레·사브니에르)','프랑스',0.3,47.35],alsace:['알자스','프랑스',7.3,48.1],rhoneN:['북부 론','프랑스',4.8,45.2],rhoneS:['남부 론','프랑스',4.85,44.1],languedoc:['랑그독','프랑스',3.3,43.4],cahors:['카오르','프랑스',1.44,44.45],
-mosel:['모젤','독일',6.9,49.9],rheingau:['라인가우','독일',8.0,50.0],pfalz:['팔츠','독일',8.1,49.3],austria:['니더외스터라이히 (바하우)','오스트리아',15.6,48.4],tokaj:['토카이','헝가리',21.4,48.1],
-rias:['리아스 바이샤스','스페인',-8.7,42.4],vinho:['비뉴 베르드','포르투갈',-8.4,41.6],douro:['도루 밸리 (포트)','포르투갈',-7.6,41.15],jerez:['헤레스 (셰리)','스페인',-6.13,36.68],rioja:['리오하','스페인',-2.5,42.4],ribera:['리베라 델 두에로','스페인',-3.8,41.6],navarra:['나바라','스페인',-1.65,42.75],priorat:['프리오랏','스페인',0.8,41.2],
-langhe:['랑게 (바롤로·바르바레스코)','이탈리아',7.98,44.65],asti:['아스티','이탈리아',8.2,44.9],gavi:['가비','이탈리아',8.8,44.69],chianti:['키안티 클라시코','이탈리아',11.3,43.5],montalc:['몬탈치노·몬테풀치아노','이탈리아',11.63,43.08],soave:['소아베','이탈리아',11.25,45.42],valpol:['발폴리첼라','이탈리아',10.93,45.53],prosecco:['코넬리아노·발도비아데네 (프로세코)','이탈리아',12.15,45.9,'프로세코'],altoadige:['알토 아디제','이탈리아',11.35,46.5],friuli:['프리울리','이탈리아',13.2,46.0],marche:['마르케 (카스텔리 디 예시)','이탈리아',13.2,43.5],abruzzo:['아브루초','이탈리아',14.0,42.3],campania:['캄파니아 (아벨리노)','이탈리아',14.8,40.93],puglia:['풀리아','이탈리아',17.4,40.5],sicily:['시칠리아','이탈리아',14.2,37.4],
-calif:['캘리포니아 (나파·소노마)','미국',-122.4,38.4],oregon:['오리건 (윌래밋 밸리)','미국',-123.1,45.2],casa:['카사블랑카 밸리','칠레',-71.4,-33.3],cchile:['센트럴 밸리 (마이포·콜차과)','칠레',-70.9,-34.3],mendoza:['멘도사','아르헨티나',-68.8,-33.0],salta:['살타 (카파야테)','아르헨티나',-65.97,-26.07],
-margaret:['마거릿 리버','호주',115.1,-33.9],clare:['클레어·이든 밸리','호주',138.6,-33.8],barossa:['바로사 밸리','호주',139.0,-34.5],adelaide:['애들레이드 힐스','호주',138.85,-35.1],coona:['쿠나와라','호주',140.8,-37.3],yarra:['야라 밸리','호주',145.5,-37.7],ruther:['러더글렌','호주',146.4,-36.1],hunter:['헌터 밸리','호주',151.3,-32.8],tas:['태즈메이니아','호주',147.0,-42.0],
+medoc:['메독 (좌안)','프랑스',-0.8,45.15,'메독 · 좌안'],graves:['그라브·페삭레오냥 (좌안)','프랑스',-0.6,44.7,'그라브 · 좌안'],sauternes:['소테른·바르삭 (좌안)','프랑스',-0.34,44.54,'소테른 · 좌안'],edm:['앙트르 되 메르','프랑스',-0.2,44.75],rightbank:['생테밀리옹·포므롤 (우안)','프랑스',-0.15,44.95,'생테밀리옹 · 우안'],
+loireE:['상세르·푸이 퓌메 (루아르)','프랑스',2.85,47.3,'상세르'],loireC:['부브레 (루아르)','프랑스',0.3,47.35,'부브레'],alsace:['알자스','프랑스',7.3,48.1],rhoneN:['북부 론','프랑스',4.8,45.2],rhoneS:['남부 론','프랑스',4.85,44.1],languedoc:['랑그독','프랑스',3.3,43.4],cahors:['카오르','프랑스',1.44,44.45],
+mosel:['모젤','독일',6.9,49.9],rheingau:['라인가우','독일',8.0,50.0],pfalz:['팔츠','독일',8.1,49.3],austria:['오스트리아','오스트리아',15.6,48.4],tokaj:['토카이','헝가리',21.4,48.1],
+rias:['리아스 바이샤스','스페인',-8.7,42.4],rioja:['리오하','스페인',-2.5,42.4],ribera:['리베라 델 두에로','스페인',-3.8,41.6],navarra:['나바라','스페인',-1.65,42.75],priorat:['프리오랏','스페인',0.8,41.2],
+langhe:['바롤로·바르바레스코 (랑게)','이탈리아',7.98,44.65,'바롤로'],asti:['아스티','이탈리아',8.2,44.9],gavi:['가비','이탈리아',8.8,44.69],chianti:['키안티 클라시코','이탈리아',11.3,43.5,'키안티'],montalc:['몬탈치노·몬테풀치아노','이탈리아',11.63,43.08,'몬탈치노'],soave:['소아베','이탈리아',11.25,45.42],valpol:['발폴리첼라','이탈리아',10.93,45.53],altoadige:['알토 아디제','이탈리아',11.35,46.5],friuli:['프리울리','이탈리아',13.2,46.0],marche:['마르케','이탈리아',13.2,43.5],abruzzo:['아브루초','이탈리아',14.0,42.3],campania:['캄파니아','이탈리아',14.8,40.93],puglia:['풀리아','이탈리아',17.4,40.5],
+calif:['캘리포니아 (나파·소노마)','미국',-122.4,38.4],oregon:['오리건','미국',-123.1,45.2],casa:['카사블랑카 밸리','칠레',-71.4,-33.3,'카사블랑카'],cchile:['센트럴 밸리 (마이포)','칠레',-70.9,-34.3],mendoza:['멘도사','아르헨티나',-68.8,-33.0],
+margaret:['마거릿 리버','호주',115.1,-33.9],clare:['클레어·이든 밸리','호주',138.6,-33.8,'클레어'],barossa:['바로사 밸리','호주',139.0,-34.5,'바로사'],adelaide:['애들레이드 힐스','호주',138.85,-35.1],coona:['쿠나와라','호주',140.8,-37.3],yarra:['야라 밸리','호주',145.5,-37.7],hunter:['헌터 밸리','호주',151.3,-32.8],
 marl:['말버러','뉴질랜드',173.9,-41.5],martin:['마틴버러','뉴질랜드',175.5,-41.2],hawkes:['호크스 베이','뉴질랜드',176.8,-39.6],otago:['센트럴 오타고','뉴질랜드',169.2,-45.0],
-stell:['스텔렌보스','남아공',18.86,-33.93],cons:['콘스탄시아·엘긴','남아공',18.42,-34.03],swart:['스와틀랜드','남아공',18.7,-33.4],walker:['워커 베이','남아공',19.3,-34.4]};
+stell:['스텔렌보스','남아공',18.86,-33.93],cons:['콘스탄시아','남아공',18.42,-34.03],walker:['워커 베이','남아공',19.3,-34.4]};
 const G=[
-{id:'chard',k:'샤르도네',e:'Chardonnay',t:'w',b:[2,5],a:[3,5],ar:'서늘한 기후는 청사과·배·레몬, 온화하면 복숭아·멜론, 따뜻하면 파인애플·망고 같은 열대과일.',mk:'개성이 중성적이라 양조 영향이 잘 드러남. 오크 숙성(바닐라·토스트), 젖산발효(버터·크림), 효모 앙금 접촉(비스킷).',st:'샤블리는 무오크·고산도의 깔끔한 스타일, 코트 드 본·마코네는 오크 숙성한 복합적 스타일, 신세계는 잘 익은 과일과 오크. 샴페인 블렌드의 핵심.',r:'chablis cotebeaune macon champagne calif casa margaret adelaide yarra walker'},
-{id:'sauv',k:'소비뇽 블랑',e:'Sauvignon Blanc',t:'w',b:[2,3],a:[5,5],ar:'풀·피망·아스파라거스·구스베리 같은 풀 향이 특징, 따뜻할수록 패션프루트 등 열대과일.',mk:'아로마를 지키려 대부분 저온 발효·무오크로 만들어 어릴 때 마심. 보르도·캘리포니아(퓌메 블랑)는 오크를 쓰기도.',st:'상세르·푸이 퓌메는 절제된 풀 향과 미네랄, 말버러는 강렬한 패션프루트·구스베리, 보르도는 세미용과 블렌딩.',r:'loireE graves edm sauternes marl casa adelaide cons calif'},
-{id:'riesling',k:'리슬링',e:'Riesling',t:'w',b:[1,3],a:[5,5],ar:'서늘하면 청사과·라임·꽃, 온화하면 복숭아·살구. 병숙성 시 꿀·토스트·석유(페트롤) 향.',mk:'오크 풍미는 거의 쓰지 않음. 드라이부터 귀부·아이스와인 같은 스위트까지 폭이 넓음.',st:'모젤은 저알코올의 섬세한 오프드라이~스위트, 알자스·오스트리아는 드라이하고 풍부함, 클레어·이든 밸리는 드라이하고 라임 향.',r:'mosel rheingau pfalz alsace austria clare'},
-{id:'semillon',k:'세미용',e:'Sémillon',t:'w',b:[2,5],a:[3,5],ar:'젊을 땐 레몬·풀 향의 중성적인 맛, 병숙성하면 토스트·꿀·견과. 귀부 와인은 살구·마멀레이드·꿀.',mk:'보르도에서는 소비뇽 블랑과 블렌딩해 오크 숙성. 소테른은 귀부병(보트리티스)에 걸린 포도로 스위트 와인.',st:'헌터 밸리는 저알코올·고산도로 숙성력이 뛰어남, 소테른·바르삭은 진한 귀부 스위트, 그라브·앙트르 되 메르는 드라이 블렌드.',r:'graves sauternes edm hunter margaret'},
-{id:'chenin',k:'슈냉 블랑',e:'Chenin Blanc',t:'w',b:[2,4],a:[5,5],ar:'청사과·레몬·풀, 잘 익으면 복숭아·열대과일, 귀부 시 꿀·마멀레이드.',mk:'드라이·오프드라이·스위트·스파클링까지 다양한 스타일로 생산.',st:'부브레·사브니에르는 높은 산도에 다양한 당도, 남아공은 잘 익은 과일 풍미에 때로 오크 사용.',r:'loireC stell swart'},
-{id:'pgris',k:'피노 그리지오 / 그리',e:'Pinot Grigio / Pinot Gris',t:'w',b:[2,5],a:[2,3],ar:'그리지오는 레몬·청사과·꽃, 그리는 복숭아·멜론·생강·꿀.',mk:'그리지오는 무오크로 가볍게, 알자스 피노 그리는 잘 익은 포도로 풍부하게 만듦.',st:'이탈리아 북동부는 가볍고 상큼한 그리지오, 알자스는 풀바디·스파이시하고 드라이~스위트, 오리건도 유명.',r:'friuli altoadige alsace oregon'},
-{id:'gewurz',k:'게뷔르츠트라미너',e:'Gewürztraminer',t:'w',b:[4,5],a:[1,2],ar:'리치·장미·생강·시나몬의 매우 강렬한 향.',mk:'당도가 높아 알코올이 높고 산도는 낮음. 무오크.',st:'알자스가 대표 산지로 드라이부터 방당주 타르디브·셀렉시옹 드 그랭 노블 같은 스위트까지.',r:'alsace altoadige'},
-{id:'viognier',k:'비오니에',e:'Viognier',t:'w',b:[4,5],a:[1,2],ar:'살구·복숭아·인동 같은 꽃향.',mk:'일부는 오크 숙성·젖산발효로 질감을 더함.',st:'북부 론의 콩드리외가 최고 산지. 코트 로티에서는 시라에 소량 섞어 발효. 랑그독은 합리적 가격의 바리에탈.',r:'rhoneN languedoc'},
-{id:'albarino',k:'알바리뇨',e:'Albariño',t:'w',b:[2,3],a:[4,5],ar:'자몽·레몬·복숭아·꽃.',mk:'신선한 아로마를 살리기 위해 무오크로 양조.',st:'스페인 리아스 바이샤스의 상큼한 아로마틱 화이트, 포르투갈 비뉴 베르드에서는 알바리뉴로 불림.',r:'rias vinho'},
-{id:'gruner',k:'그뤼너 펠트리너',e:'Grüner Veltliner',t:'w',b:[2,4],a:[4,5],ar:'청사과·레몬·풀·흰 후추.',mk:'대부분 무오크. 단순한 와인부터 숙성 가능한 고급 와인까지.',st:'오스트리아 대표 품종. 대부분 가볍고 신선하며, 바하우의 고급 와인은 풀바디에 복합적.',r:'austria'},
-{id:'furmint',k:'푸르민트',e:'Furmint',t:'w',b:[3,4],a:[5,5],ar:'드라이는 사과·레몬·스모키, 토카이 아수는 살구·마멀레이드·꿀.',mk:'귀부 포도로 만드는 토카이 아수(스위트)가 유명하고, 드라이 와인도 생산.',st:'헝가리 토카이의 핵심 품종. 높은 산도가 스위트 와인의 단맛을 받쳐 줌.',r:'tokaj'},
-{id:'muscat',k:'머스캣 / 모스카토',e:'Muscat / Moscato',t:'w',b:[1,5],a:[2,4],ar:'포도 자체의 향, 오렌지꽃·복숭아.',mk:'드라이, 저알코올 약발포, 주정강화(뱅 두 나튀렐) 등 다양.',st:'알자스는 드라이, 모스카토 다스티는 달고 가벼운 약발포, 남부 론의 VDN과 러더글렌의 주정강화 스위트.',r:'alsace asti rhoneS ruther'},
-{id:'torrontes',k:'토론테스',e:'Torrontés',t:'w',b:[3,4],a:[2,3],ar:'장미·복숭아·리치·시트러스의 화려한 향.',mk:'무오크로 아로마를 살림.',st:'아르헨티나 대표 화이트. 고지대 살타(카파야테)에서 최고 품질.',r:'salta'},
-{id:'garganega',k:'가르가네가',e:'Garganega',t:'w',b:[2,3],a:[3,4],ar:'사과·배·레몬·핵과, 고급 소아베는 꽃·아몬드 뉘앙스.',mk:'대부분 무오크로 신선하게. 말린 포도로 만드는 스위트 레치오토 디 소아베도 있음.',st:'베네토 소아베의 주품종. 구릉지의 소아베 클라시코가 더 집중도 높음.',r:'soave'},
-{id:'verdicchio',k:'베르디키오',e:'Verdicchio',t:'w',b:[2,3],a:[4,5],ar:'레몬·청사과·풀, 쌉쌀한 아몬드 같은 견과.',mk:'대부분 무오크, 일부는 앙금 숙성·병숙성으로 복합미를 더함.',st:'마르케의 베르디키오 데이 카스텔리 디 예시가 대표. 상큼하고 깔끔한 드라이 화이트.',r:'marche'},
-{id:'fiano',k:'피아노',e:'Fiano',t:'w',b:[3,4],a:[3,4],ar:'복숭아·멜론·시트러스, 병숙성 시 꿀·견과.',mk:'무오크가 일반적이고, 일부는 오크로 질감을 더하기도.',st:'캄파니아의 피아노 디 아벨리노가 대표. 질감이 풍부하고 숙성력 있는 화이트.',r:'campania'},
-{id:'cortese',k:'코르테제',e:'Cortese',t:'w',b:[2,2],a:[4,5],ar:'청사과·레몬·배, 은은하고 섬세함.',mk:'무오크로 신선함을 살려 어릴 때 마심.',st:'피에몬테 가비의 품종. 가볍고 산도 높은 드라이 화이트.',r:'gavi'},
-{id:'glera',k:'글레라',e:'Glera',t:'w',tg:'스파클링',b:[1,2],a:[3,4],ar:'청사과·배·멜론·꽃.',mk:'탱크 방식으로 2차 발효해 신선한 과일 향을 살린 스파클링.',st:'이탈리아 프로세코의 주품종. 코넬리아노·발도비아데네 DOCG가 최고 산지. 브뤼부터 엑스트라 드라이까지.',r:'prosecco'},
-{id:'palomino',k:'팔로미노',e:'Palomino',t:'w',tg:'주정강화',b:[2,5],a:[1,2],ar:'포도 자체는 중성적. 피노·만사니야는 플로르(효모막)에서 오는 빵·아몬드, 올로로소는 호두·토피·가죽.',mk:'발효 후 주정강화. 플로르 아래 생물학적 숙성(피노) 또는 산화 숙성(올로로소) 후 솔레라 시스템으로 블렌딩.',st:'스페인 헤레스 셰리의 주품종. 드라이 피노·만사니야부터 올로로소, 단맛을 더한 크림 셰리까지.',r:'jerez'},
-{id:'pinot',k:'피노 누아',e:'Pinot Noir',t:'r',b:[2,3],a:[4,5],n:[1,3],ar:'서늘하면 딸기·라즈베리·레드체리, 따뜻하면 블랙체리. 숙성 시 버섯·흙·사냥고기.',mk:'껍질이 얇아 색이 옅고 탄닌이 낮음. 프렌치 오크를 쓰되 과하지 않게.',st:'코트 드 뉘·코트 드 본은 섬세하고 복합적, 신세계(오리건·센트럴 오타고·야라 밸리 등)는 잘 익은 과일. 샴페인 블렌드에도 쓰임.',r:'cotenuits cotebeaune champagne oregon calif casa yarra tas otago marl martin pfalz walker'},
-{id:'cab',k:'카베르네 소비뇽',e:'Cabernet Sauvignon',t:'r',b:[4,5],a:[4,5],n:[4,5],ar:'블랙커런트·블랙체리, 민트·피망, 오크에서 오는 바닐라·시더.',mk:'늦게 익어 따뜻한 기후가 필요. 오크 숙성과 장기 병숙성에 적합.',st:'보르도 좌안(메독·그라브)은 자갈 토양에서 메를로와 블렌딩, 나파는 잘 익은 과일과 오크, 쿠나와라는 민트·유칼립투스 향.',r:'medoc graves calif cchile coona margaret stell hawkes'},
-{id:'merlot',k:'메를로',e:'Merlot',t:'r',b:[3,5],a:[3,4],n:[3,4],ar:'서늘하면 레드 플럼·레드체리와 풀 향, 따뜻하면 블랙플럼·블랙베리·과일케이크.',mk:'카베르네보다 일찍 익고 탄닌이 부드러움. 오크 숙성 흔함.',st:'보르도 우안(생테밀리옹·포므롤)은 점토 토양에서 메를로 중심 블렌드, 좌안에서는 보조 품종. 칠레·캘리포니아는 부드러운 스타일.',r:'rightbank medoc graves calif cchile hawkes stell'},
-{id:'syrah',k:'시라 / 쉬라즈',e:'Syrah / Shiraz',t:'r',b:[3,5],a:[3,4],n:[3,5],ar:'서늘하면 블랙베리·블랙 후추·제비꽃, 따뜻하면 블랙베리·감초·초콜릿.',mk:'오크 숙성 흔함. 호주는 미국 오크를 쓰기도.',st:'북부 론(에르미타주·코트 로티)은 후추 향의 우아한 스타일, 바로사·맥라렌 베일 쉬라즈는 진하고 알코올이 높음, 남부 론·랑그독은 그르나슈와 블렌딩.',r:'rhoneN rhoneS languedoc barossa hunter hawkes stell swart'},
-{id:'grenache',k:'그르나슈 / 가르나차',e:'Grenache / Garnacha',t:'r',b:[4,5],a:[2,3],n:[2,3],ar:'딸기·라즈베리·흰 후추·감초, 숙성 시 가죽·말린 과일.',mk:'당도가 높아 알코올이 높음. 시라·무르베드르와 블렌딩(GSM)이 많고 로제로도 생산.',st:'남부 론(샤토뇌프 뒤 파프)의 블렌드, 프리오랏은 진하고 농축됨, 나바라는 로제, 바로사 GSM.',r:'rhoneS languedoc priorat navarra rioja barossa'},
-{id:'tempranillo',k:'템프라니요',e:'Tempranillo',t:'r',b:[3,4],a:[3,3],n:[3,4],ar:'레드체리·딸기, 오크에서 바닐라·코코넛, 숙성 시 가죽·버섯·말린 과일.',mk:'오크·병숙성 기간에 따라 호벤·크리안사·레세르바·그란 레세르바로 구분.',st:'리오하는 가르나차와 블렌딩하고 미국 오크를 많이 씀, 리베라 델 두에로는 더 진하고 탄닌이 강함.',r:'rioja ribera'},
-{id:'malbec',k:'말벡',e:'Malbec',t:'r',b:[4,5],a:[3,4],n:[3,5],ar:'블랙베리·블랙플럼·제비꽃, 오크 숙성 시 바닐라·초콜릿.',mk:'오크 숙성 흔함.',st:'멘도사(고지대)는 잘 익은 과일과 부드러운 탄닌, 프랑스 카오르는 더 단단한 탄닌과 높은 산도.',r:'mendoza cahors'},
-{id:'sangiovese',k:'산조베제',e:'Sangiovese',t:'r',b:[3,4],a:[5,5],n:[4,5],ar:'레드체리·자두·말린 허브, 숙성 시 고기·흙·가죽.',mk:'전통적으로 대형 오크통 숙성, 현대식은 작은 오크통도 사용.',st:'키안티·키안티 클라시코, 산조베제 100%로 장기 숙성하는 브루넬로 디 몬탈치노, 비노 노빌레 디 몬테풀치아노.',r:'chianti montalc'},
-{id:'nebbiolo',k:'네비올로',e:'Nebbiolo',t:'r',b:[4,5],a:[5,5],n:[5,5],ar:'레드체리·장미·제비꽃, 숙성 시 타르·가죽·말린 과일.',mk:'색은 옅지만 탄닌·산도가 매우 높아 장기 숙성이 필요.',st:'피에몬테 랑게의 바롤로·바르바레스코가 대표.',r:'langhe'},
-{id:'zin',k:'진판델 / 프리미티보',e:'Zinfandel / Primitivo',t:'r',b:[3,5],a:[3,3],n:[3,4],ar:'블랙베리·블루베리·건포도·감초.',mk:'불균일하게 익어 덜 익은 알과 건포도화된 알이 섞이기도. 블러시(화이트 진판델)부터 풀바디 레드까지.',st:'캘리포니아의 고알코올 풀바디 레드와 미디엄 스위트 블러시, 이탈리아 풀리아에서는 프리미티보.',r:'calif puglia'},
-{id:'gamay',k:'가메',e:'Gamay',t:'r',b:[1,2],a:[4,4],n:[1,2],ar:'라즈베리·레드체리, 탄산침용에서 오는 바나나·풍선껌.',mk:'탄산침용(카보닉 마세라시옹)으로 과일 향을 살리고 탄닌을 낮춤.',st:'보졸레 누보처럼 가볍게 즐기는 스타일부터 숙성 가능한 보졸레 크뤼까지.',r:'beaujolais'},
-{id:'carmenere',k:'카르메네르',e:'Carmenère',t:'r',b:[3,4],a:[3,3],n:[3,4],ar:'블랙베리·블랙플럼에 피망·허브 같은 풋향과 스파이스.',mk:'늦게 익으며 덜 익으면 풋내가 강해짐. 오크 숙성 흔함.',st:'칠레의 대표 레드 품종으로 센트럴 밸리 전역에서 재배.',r:'cchile'},
-{id:'pinotage',k:'피노타지',e:'Pinotage',t:'r',b:[4,5],a:[3,3],n:[3,4],ar:'블랙베리·블랙플럼, 스모키·흙 향.',mk:'피노 누아와 생소의 교배종. 오크 숙성 흔함.',st:'남아공 고유 품종. 과일 중심의 가벼운 스타일부터 진하고 숙성 가능한 스타일까지.',r:'stell'},
-{id:'barbera',k:'바르베라',e:'Barbera',t:'r',b:[3,4],a:[5,5],n:[2,3],ar:'레드체리·자두·블랙베리, 오크 숙성 시 바닐라·향신료.',mk:'탄닌은 낮고 산도는 높음. 무오크 과일 중심부터 오크 숙성 스타일까지.',st:'피에몬테의 바르베라 다스티·바르베라 달바. 높은 산도 덕에 음식과 잘 어울리는 레드.',r:'asti langhe'},
-{id:'corvina',k:'코르비나',e:'Corvina',t:'r',b:[1,5],a:[4,5],n:[1,4],ar:'레드체리·크랜베리, 아마로네는 말린 체리·건포도·초콜릿.',mk:'말린 포도로 만드는 아마로네(드라이)·레치오토(스위트), 아마로네 찌꺼기를 활용한 리파소.',st:'베네토 발폴리첼라의 주품종. 가벼운 발폴리첼라부터 진하고 알코올 높은 아마로네까지.',r:'valpol'},
-{id:'montepulciano',k:'몬테풀치아노',e:'Montepulciano',t:'r',b:[3,4],a:[3,3],n:[3,4],ar:'블랙체리·자두·향신료.',mk:'짙은 색과 부드러운 탄닌. 오크 숙성 스타일도 있음.',st:'아브루초의 몬테풀치아노 다브루초. 토스카나의 마을 몬테풀치아노(산조베제 와인)와 혼동 주의.',r:'abruzzo'},
-{id:'nerodavola',k:'네로 다볼라',e:"Nero d'Avola",t:'r',b:[3,5],a:[3,4],n:[3,4],ar:'블랙체리·자두·향신료.',mk:'무오크 과일 중심부터 오크 숙성 고급 와인까지.',st:'시칠리아 대표 레드. 따뜻한 기후에서 잘 익은 과일의 풀바디 스타일.',r:'sicily'},
-{id:'touriga',k:'투리가 나시오날',e:'Touriga Nacional',t:'r',tg:'포트',b:[4,5],a:[3,4],n:[4,5],ar:'블랙베리·블랙플럼·제비꽃·허브.',mk:'포트의 핵심 품종. 발효 중 주정을 넣어 단맛을 남기는 주정강화. 드라이 도루 레드도 생산.',st:'포르투갈 도루 밸리의 포트(루비·토니 등)와 진한 드라이 레드.',r:'douro'}
+{id:'pinot',ch:6,p:1,k:'피노 누아',e:'Pinot Noir',t:'r',b:[2,3],a:[4,5],n:[1,3],ar:'딸기·라즈베리·레드체리 / 숙성: 버섯·흙',pt:'껍질이 얇아 색이 옅고 탄닌이 낮음. 서늘~온화한 기후 필요.',rs:[['cotenuits','최고급 레드, 그랑 크뤼 다수'],['cotebeaune','섬세하고 우아한 레드'],['champagne','샴페인 블렌드 품종'],['pfalz','독일 슈페트부르군더'],['calif','카르네로스·소노마, 잘 익은 과일'],['oregon','레드 과일, 우아한 스타일'],['casa','서늘한 해양성 기후'],['yarra','서늘한 기후의 섬세한 스타일'],['marl','가볍고 과일 중심'],['martin','진하고 복합적'],['otago','잘 익은 과일, 진한 스타일'],['walker','남아공 서늘한 해안']]},
+{id:'zin',ch:7,k:'진판델 / 프리미티보',e:'Zinfandel / Primitivo',t:'r',b:[3,5],a:[3,3],n:[3,4],ar:'블랙베리·블루베리, 잼·건포도 같은 잘 익은 과일',pt:'포도알이 불균일하게 익어 건포도 향과 높은 알코올.',rs:[['calif','풀바디 레드, 블러시(화이트 진판델)'],['puglia','프리미티보, 잘 익은 과일']]},
+{id:'riesling',ch:8,p:1,k:'리슬링',e:'Riesling',t:'w',b:[1,3],a:[5,5],ar:'청사과·라임·꽃 → 복숭아·살구 / 숙성: 꿀·토스트·페트롤',pt:'무오크. 높은 산도로 드라이부터 스위트, 장기 숙성까지.',rs:[['mosel','저알코올, 오프드라이~스위트'],['rheingau','드라이~스위트, 바디 더 있음'],['pfalz','드라이, 잘 익은 과일'],['alsace','드라이, 풀바디'],['austria','드라이, 풀바디'],['clare','드라이, 라임·토스트']]},
+{id:'chenin',ch:9,k:'슈냉 블랑',e:'Chenin Blanc',t:'w',b:[2,4],a:[5,5],ar:'청사과·레몬 → 복숭아·열대과일 / 귀부: 꿀',pt:'높은 산도. 드라이·스위트·스파클링 모두 가능.',rs:[['loireC','드라이~스위트, 스파클링'],['stell','남아공, 잘 익은 과일, 때로 오크']]},
+{id:'semillon',ch:9,k:'세미용',e:'Sémillon',t:'w',b:[2,5],a:[3,5],ar:'레몬·풀 / 숙성: 토스트·꿀 / 귀부: 살구·마멀레이드',pt:'귀부병(보트리티스)으로 만드는 소테른 스위트가 핵심.',rs:[['sauternes','귀부 스위트'],['graves','소비뇽 블랑과 블렌드, 오크 숙성'],['edm','드라이 블렌드, 무오크'],['hunter','저알코올·고산도, 병숙성 시 토스트·꿀'],['margaret','소비뇽 블랑과 블렌드']]},
+{id:'furmint',ch:9,k:'푸르민트',e:'Furmint',t:'w',b:[3,4],a:[5,5],ar:'사과·레몬 / 토카이: 살구·마멀레이드·꿀',pt:'높은 산도. 귀부 스위트 토카이 아수가 대표.',rs:[['tokaj','드라이 푸르민트와 토카이 아수']]},
+{id:'chard',ch:10,p:1,k:'샤르도네',e:'Chardonnay',t:'w',b:[2,5],a:[3,5],ar:'서늘: 청사과·레몬 / 따뜻: 복숭아·파인애플 / 오크: 바닐라·토스트',pt:'중성적 품종이라 오크·젖산발효(버터)·앙금 접촉 등 양조 영향이 큼.',rs:[['chablis','무오크, 고산도, 청사과·레몬'],['cotebeaune','뫼르소 등, 오크 숙성 풀바디'],['macon','푸이 퓌세, 미디엄 바디'],['champagne','스파클링 블렌드'],['calif','잘 익은 열대과일, 오크'],['casa','서늘한 해양성, 신선함'],['adelaide','서늘한 고지대, 우아함'],['yarra','서늘한 기후, 절제된 오크'],['margaret','풍부하고 균형 잡힘'],['walker','서늘한 해안, 우아함']]},
+{id:'sauv',ch:11,p:1,k:'소비뇽 블랑',e:'Sauvignon Blanc',t:'w',b:[2,3],a:[5,5],ar:'풀·피망·구스베리 / 따뜻: 패션프루트',pt:'대부분 무오크로 아로마를 살려 어릴 때 마심.',rs:[['loireE','절제된 풀 향, 미네랄'],['graves','세미용과 블렌드, 오크 가능'],['edm','드라이 블렌드, 무오크'],['marl','강렬한 패션프루트·구스베리'],['casa','서늘한 해양성'],['adelaide','서늘한 고지대'],['cons','서늘한 해안'],['calif','퓌메 블랑(오크 숙성)']]},
+{id:'pgris',ch:12,p:1,k:'피노 그리지오 / 그리',e:'Pinot Grigio / Pinot Gris',t:'w',b:[2,5],a:[2,3],ar:'그리지오: 레몬·청사과 / 그리: 복숭아·생강·꿀',pt:'이탈리아는 가볍고 상큼하게(그리지오), 알자스는 풍부하게(그리).',rs:[['friuli','가볍고 상큼한 그리지오'],['altoadige','가볍고 상큼한 그리지오'],['alsace','풀바디·스파이시, 드라이~스위트'],['oregon','미디엄 바디, 잘 익은 과일']]},
+{id:'gewurz',ch:13,k:'게뷔르츠트라미너',e:'Gewürztraminer',t:'w',b:[4,5],a:[1,2],ar:'리치·장미·생강·시나몬',pt:'고알코올·저산도, 매우 강한 아로마.',rs:[['alsace','드라이~스위트(방당주 타르디브·SGN)']]},
+{id:'viognier',ch:13,k:'비오니에',e:'Viognier',t:'w',b:[4,5],a:[1,2],ar:'살구·복숭아·꽃',pt:'저산도·고알코올. 일부 오크·젖산발효.',rs:[['rhoneN','콩드리외, 최고급 비오니에'],['languedoc','IGP 페이 독, 가성비 바리에탈']]},
+{id:'albarino',ch:13,k:'알바리뇨',e:'Albariño',t:'w',b:[2,3],a:[4,5],ar:'자몽·복숭아·꽃',pt:'무오크, 상큼한 아로마틱 화이트.',rs:[['rias','대표 산지']]},
+{id:'merlot',ch:14,p:1,k:'메를로',e:'Merlot',t:'r',b:[3,5],a:[3,4],n:[3,4],ar:'서늘: 레드 플럼·풀 / 따뜻: 블랙플럼·블랙베리',pt:'카베르네보다 탄닌이 부드럽고 바디·알코올이 높음.',rs:[['rightbank','메를로 중심 블렌드'],['medoc','카베르네의 보조 품종'],['calif','나파, 잘 익은 과일·오크'],['cchile','부드럽고 잘 익은 스타일'],['hawkes','보르도 블렌드']]},
+{id:'cab',ch:15,p:1,k:'카베르네 소비뇽',e:'Cabernet Sauvignon',t:'r',b:[4,5],a:[4,5],n:[4,5],ar:'블랙커런트·블랙체리·민트 / 오크: 바닐라·시더',pt:'늦게 익어 따뜻한 기후 필요. 보르도 좌안 자갈 토양.',rs:[['medoc','포이야크·마고, 카베르네 중심'],['graves','페삭레오냥, 카베르네 중심'],['calif','나파, 풀바디·잘 익은 과일·오크'],['cchile','마이포, 블랙커런트·민트'],['coona','민트·유칼립투스'],['margaret','우아한 보르도 스타일'],['stell','풀바디, 보르도 블렌드'],['hawkes','보르도 블렌드']]},
+{id:'syrah',ch:16,p:1,k:'시라 / 쉬라즈',e:'Syrah / Shiraz',t:'r',b:[3,5],a:[3,4],n:[3,5],ar:'서늘: 블랙베리·블랙 후추·제비꽃 / 따뜻: 감초·초콜릿',pt:'서늘하면 후추 향, 따뜻하면 진하고 잘 익은 과일.',rs:[['rhoneN','에르미타주·코트 로티, 장기 숙성'],['rhoneS','그르나슈와 블렌드'],['barossa','풀바디, 고알코올'],['hunter','미디엄 바디, 흙 향'],['hawkes','서늘한 기후의 후추 향'],['stell','풀바디, 잘 익은 과일']]},
+{id:'gamay',ch:17,k:'가메',e:'Gamay',t:'r',b:[1,2],a:[4,4],n:[1,2],ar:'라즈베리·레드체리 / 탄산침용: 바나나·풍선껌',pt:'탄산침용으로 과일 향을 살리고 탄닌을 낮춤.',rs:[['beaujolais','누보부터 숙성 가능한 크뤼까지']]},
+{id:'grenache',ch:18,k:'그르나슈 / 가르나차',e:'Grenache / Garnacha',t:'r',b:[4,5],a:[2,3],n:[2,3],ar:'딸기·라즈베리·흰 후추 / 숙성: 가죽',pt:'고알코올·저산도. 블렌딩(GSM)과 로제에 많이 쓰임.',rs:[['rhoneS','샤토뇌프 뒤 파프, 타벨 로제'],['priorat','농축되고 진한 레드'],['navarra','로제'],['rioja','템프라니요와 블렌드'],['barossa','GSM 블렌드']]},
+{id:'tempranillo',ch:19,k:'템프라니요',e:'Tempranillo',t:'r',b:[3,4],a:[3,3],n:[3,4],ar:'레드체리·딸기 / 미국 오크: 바닐라·코코넛 / 숙성: 가죽',pt:'숙성 기간에 따라 호벤·크리안사·레세르바·그란 레세르바.',rs:[['rioja','가르나차와 블렌드, 미국 오크'],['ribera','더 진하고 탄닌 강함']]},
+{id:'carmenere',ch:20,k:'카르메네르',e:'Carmenère',t:'r',b:[3,4],a:[3,3],n:[3,4],ar:'블랙베리·블랙플럼 + 피망 같은 풋향',pt:'덜 익으면 풋내가 강함.',rs:[['cchile','칠레 대표 레드']]},
+{id:'malbec',ch:20,k:'말벡',e:'Malbec',t:'r',b:[4,5],a:[3,4],n:[3,5],ar:'블랙베리·블랙플럼·제비꽃',pt:'고지대 멘도사에서 잘 익은 과일과 부드러운 탄닌.',rs:[['mendoza','풀바디, 부드러운 탄닌'],['cahors','더 단단한 탄닌, 높은 산도']]},
+{id:'pinotage',ch:20,k:'피노타지',e:'Pinotage',t:'r',b:[4,5],a:[3,3],n:[3,4],ar:'블랙베리·블랙플럼, 스모키·흙',pt:'피노 누아 × 생소 교배종.',rs:[['stell','남아공 고유 품종']]},
+{id:'cortese',ch:21,k:'코르테제',e:'Cortese',t:'w',b:[2,2],a:[4,5],ar:'청사과·레몬·배',pt:'가볍고 산도 높은 드라이 화이트.',rs:[['gavi','가비']]},
+{id:'garganega',ch:21,k:'가르가네가',e:'Garganega',t:'w',b:[2,3],a:[3,4],ar:'사과·배·핵과, 아몬드',pt:'스위트 레치오토 디 소아베도 있음.',rs:[['soave','소아베·소아베 클라시코']]},
+{id:'verdicchio',ch:21,k:'베르디키오',e:'Verdicchio',t:'w',b:[2,3],a:[4,5],ar:'레몬·청사과·쌉쌀한 아몬드',pt:'상큼하고 깔끔한 드라이 화이트.',rs:[['marche','베르디키오 데이 카스텔리 디 예시']]},
+{id:'fiano',ch:21,k:'피아노',e:'Fiano',t:'w',b:[3,4],a:[3,4],ar:'복숭아·멜론 / 숙성: 꿀·견과',pt:'질감이 풍부하고 숙성력 있음.',rs:[['campania','피아노 디 아벨리노']]},
+{id:'nebbiolo',ch:22,k:'네비올로',e:'Nebbiolo',t:'r',b:[4,5],a:[5,5],n:[5,5],ar:'레드체리·장미 / 숙성: 타르·가죽',pt:'색은 옅지만 탄닌·산도가 매우 높아 장기 숙성.',rs:[['langhe','바롤로·바르바레스코']]},
+{id:'barbera',ch:22,k:'바르베라',e:'Barbera',t:'r',b:[3,4],a:[5,5],n:[2,3],ar:'레드체리·자두·블랙베리',pt:'높은 산도·낮은 탄닌.',rs:[['asti','바르베라 다스티'],['langhe','바르베라 달바']]},
+{id:'corvina',ch:22,k:'코르비나',e:'Corvina',t:'r',b:[1,5],a:[4,5],n:[1,4],ar:'레드체리 / 아마로네: 말린 체리·건포도',pt:'말린 포도로 아마로네(드라이)·레치오토(스위트), 그리고 리파소.',rs:[['valpol','발폴리첼라·아마로네']]},
+{id:'sangiovese',ch:23,k:'산조베제',e:'Sangiovese',t:'r',b:[3,4],a:[5,5],n:[4,5],ar:'레드체리·자두·말린 허브 / 숙성: 흙·가죽',pt:'높은 산도와 탄닌.',rs:[['chianti','키안티·키안티 클라시코'],['montalc','브루넬로 디 몬탈치노, 비노 노빌레 디 몬테풀치아노']]},
+{id:'montepulciano',ch:23,k:'몬테풀치아노',e:'Montepulciano',t:'r',b:[3,4],a:[3,3],n:[3,4],ar:'블랙체리·자두',pt:'토스카나 마을 몬테풀치아노(산조베제 와인)와 혼동 주의.',rs:[['abruzzo','몬테풀치아노 다브루초']]}
 ];
 const LV=['낮음','중간(-)','중간','중간(+)','높음'],COL={w:'#BA7517',r:'#E24B4A',m:'#7F77DD'};
 let filt='all',sg=null,sr=null,T=d3.zoomIdentity;
 const GM={},RG={};G.forEach(g=>GM[g.id]=g);for(const id in R)RG[id]=[];
-G.forEach(g=>g.r.split(' ').forEach(r=>RG[r].push(g.id)));
+G.forEach(g=>g.rs.forEach(([r])=>RG[r].push(g.id)));
 const ok=g=>filt==='all'||g.t===filt,vis=d=>RG[d.id].some(i=>ok(GM[i]));
 const sel=document.getElementById('sel'),regEl=document.getElementById('reg'),detEl=document.getElementById('det');
-function fillSel(){sel.innerHTML='<option value="">품종 선택</option>';[['w','화이트'],['r','레드']].forEach(([t,l])=>{if(filt!=='all'&&filt!==t)return;const og=document.createElement('optgroup');og.label=l;G.filter(g=>g.t===t).forEach(g=>{const o=document.createElement('option');o.value=g.id;o.textContent=g.k;og.appendChild(o)});sel.appendChild(og)});sel.value=sg||''}
+function fillSel(){sel.innerHTML='<option value="">품종 선택 (교재 순)</option>';G.filter(ok).forEach(g=>{const o=document.createElement('option');o.value=g.id;o.textContent=`${g.ch}장 · ${g.k}${g.p?' ★':''}`;sel.appendChild(o)});sel.value=sg||''}
 const W=400,H=260,svg=d3.select('#map');
 const proj=d3.geoNaturalEarth1().fitExtent([[2,2],[W-2,H-2]],{type:'Sphere'}),path=d3.geoPath(proj);
-const zG=svg.append('g'),g110=zG.append('g'),g50=zG.append('g').style('display','none'),dotG=svg.append('g'),labG=svg.append('g').style('pointer-events','none');
+const zG=svg.append('g'),g110=zG.append('g'),g50=zG.append('g').style('display','none'),dotG=svg.append('g'),labG=svg.append('g');
 const pts=Object.keys(R).map(id=>{const r=R[id],lb=r[4]||r[0].split(' (')[0];return{id,p:proj([r[2],r[3]]),lb,lw:[...lb].reduce((s,c)=>s+(c.charCodeAt(0)>4351?12:6.5),0)}});
 pts.forEach(d=>{let m=1e9;pts.forEach(o=>{if(o!==d)m=Math.min(m,Math.hypot(o.p[0]-d.p[0],o.p[1]-d.p[1]))});d.nn=m});
 const rg=dotG.selectAll('g').data(pts).join('g').style('cursor','pointer').on('click',(e,d)=>tapRegion(d));
-rg.append('circle').attr('class','h').attr('r',12).style('fill','transparent');
-rg.append('circle').attr('class','d').attr('r',5);
-const lab=labG.selectAll('text').data(pts).join('text').text(d=>d.lb).attr('dy','0.35em').style('font-size','12px').style('fill','var(--text-secondary)').style('stroke','var(--surface-1)').style('stroke-width','3px').style('stroke-linejoin','round').style('paint-order','stroke').style('display','none');
+rg.append('circle').attr('class','h').attr('r',14).style('fill','transparent');
+rg.append('circle').attr('class','d').attr('r',6);
+const lab=labG.selectAll('g').data(pts).join('g').style('cursor','pointer').style('display','none').on('click',(e,d)=>pickRegion(d.id));
+lab.append('rect').attr('y',-12).attr('height',24).attr('width',d=>d.lw+10).style('fill','transparent');
+lab.append('text').text(d=>d.lb).attr('dy','0.35em').style('font-size','12px').style('stroke','var(--surface-1)').style('stroke-width','3px').style('stroke-linejoin','round').style('paint-order','stroke');
 function landPaths(gr,f){gr.selectAll('path.c').data(f).join('path').attr('class','c').attr('d',path).attr('vector-effect','non-scaling-stroke').style('fill','var(--border-strong)').style('stroke','var(--surface-1)').style('stroke-width',0.6)}
 d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(w=>landPaths(g110,topojson.feature(w,w.objects.countries).features)).catch(()=>{});
 let hi=0,riv=null;
 function loadHi(){if(hi)return;hi=1;d3.json('https://cdn.jsdelivr.net/npm/sane-topojson@4.0.0/dist/world_50m.json').then(w=>{const o=w.objects;landPaths(g50,topojson.feature(w,o.countries).features);if(o.lakes)g50.append('path').datum(topojson.feature(w,o.lakes)).attr('d',path).style('fill','var(--surface-1)').style('stroke','none');if(o.rivers)riv=g50.append('path').datum(topojson.feature(w,o.rivers)).attr('d',path).attr('vector-effect','non-scaling-stroke').style('fill','none').style('stroke','#378ADD').style('stroke-width',1.2).style('stroke-linecap','round').style('stroke-linejoin','round');hi=2;update()}).catch(()=>{hi=3})}
 let raf=0;
 function update(){rg.attr('transform',d=>`translate(${T.applyX(d.p[0])},${T.applyY(d.p[1])})`);const on=hi===2&&T.k>=2.5;g110.style('display',on?'none':null);g50.style('display',on?null:'none');if(riv)riv.style('opacity',Math.max(0,Math.min(0.9,(T.k-2.5)/3)));if(T.k>=1.8&&!hi)loadHi();if(!raf)raf=requestAnimationFrame(()=>{raf=0;placeLabels()})}
-function placeLabels(){lab.style('display','none');if(T.k<2.5)return;const pri=d=>d.id===sr?3:(sg&&RG[d.id].includes(sg)?2:1);const boxes=[[W-46,0,W,90]],sp=new Map();pts.forEach(d=>{if(!vis(d))return;const x=T.applyX(d.p[0]),y=T.applyY(d.p[1]);sp.set(d.id,[x,y]);boxes.push([x-5,y-5,x+5,y+5])});
-pts.filter(d=>sp.has(d.id)).sort((a,b)=>pri(b)-pri(a)).forEach(d=>{if(sg&&pri(d)===1&&T.k<8)return;const[x,y]=sp.get(d.id);if(x<0||x>W||y<0||y>H)return;for(const s of[1,-1]){const x0=s>0?x+8:x-8-d.lw,b=[x0,y-8,x0+d.lw,y+8];if(b[0]<1||b[2]>W-1||b[1]<1||b[3]>H-1)continue;if(boxes.some(o=>b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1]))continue;boxes.push(b);lab.filter(o=>o===d).style('display',null).attr('x',s>0?x+8:x-8).attr('y',y).attr('text-anchor',s>0?'start':'end');break}})}
+function placeLabels(){lab.style('display','none');const pri=d=>d.id===sr?3:(sg&&RG[d.id].includes(sg)?2:1);const boxes=[[W-46,0,W,90]],sp=new Map();pts.forEach(d=>{if(!vis(d))return;const x=T.applyX(d.p[0]),y=T.applyY(d.p[1]);sp.set(d.id,[x,y]);boxes.push([x-6,y-6,x+6,y+6])});
+pts.filter(d=>sp.has(d.id)).sort((a,b)=>pri(b)-pri(a)).forEach(d=>{const pr=pri(d);if(sg&&pr===1&&T.k<6)return;const[x,y]=sp.get(d.id);if(x<0||x>W||y<0||y>H)return;for(const s of[1,-1]){const x0=s>0?x+9:x-9-d.lw,b=[x0-2,y-9,x0+d.lw+2,y+9];if(b[0]<1||b[2]>W-1||b[1]<1||b[3]>H-1)continue;if(boxes.some(o=>b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1]))continue;boxes.push(b);const el=lab.filter(o=>o===d).style('display',null).attr('transform',`translate(${s>0?x+9:x-9},${y})`);el.select('rect').attr('x',s>0?-5:-d.lw-5);el.select('text').attr('text-anchor',s>0?'start':'end').style('fill',pr>1?'var(--text-primary)':'var(--text-secondary)').style('font-weight',pr>1?500:400);break}})}
 const zoom=d3.zoom().scaleExtent([1,250]).extent([[0,0],[W,H]]).translateExtent([[0,0],[W,H]]).on('zoom',e=>{T=e.transform;zG.attr('transform',T);update()});
 svg.call(zoom).on('dblclick.zoom',null);
 function render(){rg.each(function(d){const ids=RG[d.id].filter(i=>ok(GM[i]));const h=sg?RG[d.id].includes(sg):ids.length>0;let c;if(sg)c=COL[GM[sg].t];else{const w=ids.some(i=>GM[i].t==='w'),r=ids.some(i=>GM[i].t==='r');c=w&&r?COL.m:w?COL.w:COL.r}
-const s=d3.select(this).style('pointer-events',ids.length?'auto':'none');s.select('circle.d').attr('r',h?(d.id===sr?7:5):3.5).style('fill',h?c:'var(--text-muted)').style('opacity',h?1:(ids.length?0.45:0.12)).style('stroke',d.id===sr?'var(--text-primary)':'var(--surface-1)').style('stroke-width',d.id===sr?2:1.2)});
+const s=d3.select(this).style('pointer-events',ids.length?'auto':'none');s.select('circle.d').attr('r',h?(d.id===sr?8:6):4).style('fill',h?c:'var(--text-muted)').style('opacity',h?1:(ids.length?0.45:0.12)).style('stroke',d.id===sr?'var(--text-primary)':'var(--surface-1)').style('stroke-width',d.id===sr?2:1.2)});
 if(sg)rg.filter(d=>RG[d.id].includes(sg)).raise();if(sr)rg.filter(d=>d.id===sr).raise();placeLabels()}
 function goTo(cx,cy,k,dur){k=Math.max(1,Math.min(250,k));svg.transition().duration(dur||750).call(zoom.transform,d3.zoomIdentity.translate(W/2-k*cx,H/2-k*cy).scale(k))}
 function zoomBounds(x0,y0,x1,y1,mk){const k=Math.min(mk,0.85*Math.min(W/Math.max(x1-x0,.01),H/Math.max(y1-y0,.01)));goTo((x0+x1)/2,(y0+y1)/2,k)}
 function zoomLL(b){if(!b)return svg.transition().duration(650).call(zoom.transform,d3.zoomIdentity);const ps=[];for(let i=0;i<=6;i++){const lo=b[0]+(b[2]-b[0])*i/6;ps.push(proj([lo,b[1]]),proj([lo,b[3]]))}const xs=ps.map(p=>p[0]),ys=ps.map(p=>p[1]);zoomBounds(Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys),250)}
 function zoomGrape(id){const ps=pts.filter(d=>RG[d.id].includes(id)).map(d=>d.p),xs=ps.map(p=>p[0]),ys=ps.map(p=>p[1]);zoomBounds(Math.min(...xs)-3,Math.min(...ys)-3,Math.max(...xs)+3,Math.max(...ys)+3,60)}
 function zoomRegion(id){const d=pts.find(o=>o.id===id);goTo(d.p[0],d.p[1],Math.max(T.k,Math.min(220,30/d.nn)))}
-function tapRegion(d){const x=T.applyX(d.p[0]),y=T.applyY(d.p[1]);const near=pts.some(o=>o!==d&&vis(o)&&Math.hypot(T.applyX(o.p[0])-x,T.applyY(o.p[1])-y)<11);if(near&&T.k<240){svg.transition().duration(500).call(zoom.scaleBy,4,[x,y]);return}pickRegion(d.id)}
-const PRE=[['세계',null],['유럽',[-10,36,23,52]],['보르도',[-1.2,44.4,0.2,45.35]],['북미',[-126,34,-117,48]],['남미',[-76,-38,-62,-22]],['호주',[113,-44,154,-30]],['뉴질랜드',[166,-47,179,-38]],['남아공',[17.6,-35,20,-33]]];
+function tapRegion(d){const x=T.applyX(d.p[0]),y=T.applyY(d.p[1]);const near=pts.some(o=>o!==d&&vis(o)&&Math.hypot(T.applyX(o.p[0])-x,T.applyY(o.p[1])-y)<12);if(near&&T.k<240){svg.transition().duration(500).call(zoom.scaleBy,4,[x,y]);return}pickRegion(d.id)}
+const PRE=[['세계',null],['유럽',[-10,36,23,52]],['보르도',[-1.2,44.4,0.2,45.35]],['이탈리아',[6.5,37.5,18.5,47]],['북미',[-126,34,-117,48]],['남미',[-76,-38,-62,-28]],['호주',[113,-44,154,-30]],['뉴질랜드',[166,-47,179,-38]],['남아공',[17.6,-35,20,-33]]];
 const pres=document.getElementById('pres');PRE.forEach(([l,b])=>{const bt=document.createElement('button');bt.className='pre';bt.textContent=l;bt.onclick=()=>zoomLL(b);pres.appendChild(bt)});
 document.getElementById('zin').onclick=()=>svg.transition().duration(300).call(zoom.scaleBy,2.5);
 document.getElementById('zout').onclick=()=>svg.transition().duration(300).call(zoom.scaleBy,0.4);
 function chip(id){const x=GM[id];return`<button class="chip${id===sg?' on':''}" data-g="${id}"><span class="sq" style="background:${COL[x.t]}"></span>${x.k}</button>`}
 function showReg(){if(!sr){regEl.innerHTML='';return}const r=R[sr],ids=RG[sr].filter(i=>ok(GM[i]));regEl.innerHTML=`<div style="margin-bottom:8px;font-weight:500">${r[0]} <span style="font-weight:400;color:var(--text-secondary)">· ${r[1]}</span></div><div style="display:flex;flex-wrap:wrap;gap:6px">${ids.map(chip).join('')}</div>`}
 function meter(l,v,c){const t=v[0]===v[1]?LV[v[0]-1]:LV[v[0]-1]+' ~ '+LV[v[1]-1];return`<div style="display:grid;grid-template-columns:34px minmax(0,1fr) 108px;align-items:center;gap:10px;margin-top:8px"><span style="font-size:13px;color:var(--text-secondary)">${l}</span><div class="meter">${[1,2,3,4,5].map(i=>`<span${i>=v[0]&&i<=v[1]?` style="background:${c}"`:''}></span>`).join('')}</div><span style="font-size:12px;color:var(--text-secondary);text-align:right">${t}</span></div>`}
-function showDet(){if(!sg){detEl.innerHTML='<p style="font-size:14px;color:var(--text-secondary);margin:0">지도의 점을 누르거나 위에서 품종을 고르면 상세 특징이 여기에 나와요.</p>';return}const x=GM[sg],w=x.t==='w',c=COL[x.t],bs='font-size:12px;padding:3px 10px;border-radius:var(--radius);';
-detEl.innerHTML=`<div style="background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:1rem 1.25rem"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><p style="font-size:18px;font-weight:500;margin:0">${x.k}</p><p style="font-size:13px;color:var(--text-secondary);margin:2px 0 0">${x.e}</p></div><div style="display:flex;gap:6px;flex-shrink:0">${x.tg?`<span style="${bs}background:var(--bg-pro);color:var(--text-pro)">${x.tg}</span>`:''}<span style="${bs}background:var(--bg-${w?'warning':'danger'});color:var(--text-${w?'warning':'danger'})">${w?'화이트':'레드'}</span></div></div>
+function showDet(){if(!sg){detEl.innerHTML='<p style="font-size:14px;color:var(--text-secondary);margin:0">지도의 점이나 이름을 누르거나 위에서 품종을 고르면 요약 카드가 나와요.</p>';return}const x=GM[sg],w=x.t==='w',c=COL[x.t],bs='font-size:12px;padding:3px 10px;border-radius:var(--radius);';
+detEl.innerHTML=`<div style="background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:1rem 1.25rem"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><p style="font-size:18px;font-weight:500;margin:0">${x.k}</p><p style="font-size:13px;color:var(--text-secondary);margin:2px 0 0">${x.e} · 교재 ${x.ch}장</p></div><div style="display:flex;gap:6px;flex-shrink:0">${x.p?`<span style="${bs}background:var(--bg-pro);color:var(--text-pro)">주요 품종</span>`:''}<span style="${bs}background:var(--bg-${w?'warning':'danger'});color:var(--text-${w?'warning':'danger'})">${w?'화이트':'레드'}</span></div></div>
 <div style="margin-top:6px">${meter('바디',x.b,c)}${meter('산도',x.a,c)}${x.n?meter('탄닌',x.n,c):''}</div>
-<p class="lab">아로마</p><p class="txt">${x.ar}</p><p class="lab">양조 포인트</p><p class="txt">${x.mk}</p><p class="lab">대표 스타일</p><p class="txt">${x.st}</p>
-<p class="lab">주요 산지 (누르면 지도 이동)</p><div style="display:flex;flex-wrap:wrap;gap:6px">${x.r.split(' ').map(r=>`<button class="chip${r===sr?' on':''}" data-r="${r}">${R[r][0]}</button>`).join('')}</div></div>`}
+<p class="lab">핵심 향</p><p class="txt">${x.ar}</p><p class="lab">시험 포인트</p><p class="txt">${x.pt}</p>
+<p class="lab">산지별 스타일 (누르면 지도 이동)</p>${x.rs.map(([r,n])=>`<button class="row${r===sr?' on':''}" data-r="${r}"><b>${R[r][0]}</b><span>${n}</span></button>`).join('')}</div>`}
 function pickRegion(id){sr=id;const ids=RG[id].filter(i=>ok(GM[i]));if(!sg||!ids.includes(sg))sg=ids[0]||null;sel.value=sg||'';render();showReg();showDet()}
 regEl.addEventListener('click',e=>{const b=e.target.closest('[data-g]');if(!b)return;sg=b.dataset.g;sel.value=sg;render();showReg();showDet()});
-detEl.addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(!b)return;sr=b.dataset.r;render();showReg();showDet();zoomRegion(sr);window.scrollTo({top:0,behavior:'smooth'})});
+detEl.addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(!b)return;sr=b.dataset.r;render();showReg();showDet();zoomRegion(sr);document.getElementById('mapbox').scrollIntoView({behavior:'smooth',block:'start'})});
 sel.addEventListener('change',()=>{sg=sel.value||null;if(sr&&(!sg||!RG[sr].includes(sg)))sr=null;render();showReg();showDet();if(sg)zoomGrape(sg);else zoomLL(null)});
 document.getElementById('flt').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;filt=b.dataset.f;document.querySelectorAll('#flt button').forEach(x=>x.classList.toggle('on',x===b));if(sg&&!ok(GM[sg]))sg=null;if(sr&&!RG[sr].some(i=>ok(GM[i])))sr=null;fillSel();render();showReg();showDet()});
 fillSel();update();render();showDet();
